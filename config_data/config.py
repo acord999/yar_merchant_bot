@@ -4,15 +4,15 @@ from environs import Env
 
 @dataclass
 class DatabaseConfig:
-    database: str         # Название базы данных
-    db_host: str          # URL-адрес базы данных
-    db_user: str          # Username пользователя базы данных
-    db_password: str      # Пароль к базе данных
+    database: str  # Название базы данных
+    db_host: str  # URL-адрес базы данных
+    db_user: str  # Username пользователя базы данных
+    db_password: str  # Пароль к базе данных
 
 
 @dataclass
 class TgBot:
-    token: str            # Токен для доступа к телеграм-боту
+    token: str  # Токен для доступа к телеграм-боту
     admin_ids: list[int]  # Список id администраторов бота
 
 
@@ -43,8 +43,7 @@ config = Config(
 )
 
 
-def load_config(path: str | None) -> Config:
-
+def load_config(path: str = ".env") -> Config:
     env: Env = Env()
     env.read_env(path)
 
@@ -60,3 +59,18 @@ def load_config(path: str | None) -> Config:
             db_password=env('DB_PASSWORD')
         )
     )
+
+
+def DATABASE_URL_asyncpg(config_data: Config = load_config()) -> str:
+    # postgresql+asyncpg://postgres:postgres@localhost:5432/sa
+    db = config_data.db
+    return f"postgresql+asyncpg://" \
+           f"{db.db_user}:{db.db_password}@{db.db_host}/{db.database}"
+
+
+def DATABASE_URL_psycopg(config_data: Config = load_config()) -> str:
+    # DSN
+    # postgresql+psycopg://postgres:postgres@localhost:5432/sa
+    db = config_data.db
+    return f"postgresql+psycopg://" \
+           f"{db.db_user}:{db.db_password}@{db.db_host}/{db.database}"
