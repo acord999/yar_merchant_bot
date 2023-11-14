@@ -21,4 +21,3 @@ def create_tables():
 #         session.commit()
 
 
-create_tables()

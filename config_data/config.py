@@ -17,9 +17,15 @@ class TgBot:
 
 
 @dataclass
+class RedisConfig:
+    host: str
+
+
+@dataclass
 class Config:
     tg_bot: TgBot
     db: DatabaseConfig
+    redis_config: RedisConfig
 
 
 # Создаем экземпляр класса Env
@@ -39,6 +45,10 @@ config = Config(
         db_host=env('DB_HOST'),
         db_user=env('DB_USER'),
         db_password=env('DB_PASSWORD')
+
+    ),
+    redis_config=RedisConfig(
+        host=env("REDIS_HOST")
     )
 )
 
@@ -57,6 +67,9 @@ def load_config(path: str = ".env") -> Config:
             db_host=env('DB_HOST'),
             db_user=env('DB_USER'),
             db_password=env('DB_PASSWORD')
+        ),
+        redis_config=RedisConfig(
+            host=env("REDIS_HOST")
         )
     )
 

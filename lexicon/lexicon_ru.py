@@ -24,6 +24,23 @@ LEXICON_RU: {str: str} = {
     "contact": "Связаться с администратором",
     "ship_info": "НАПИСАТЬ ИНФОРМАЦИЮ О ДОСТАВКЕ",
     "restrictions_info": "НАПИСАТЬ ИНФОРМАЦИЮ О ОГРАНИЧЕНИЯХ",
+    "manage_categories": "Редактировать категории",
+    "manage_products": "Редактировать товары" ,
+    "create_category": "Добавить категорию",
+    "edit_category": "Редактировать категорию",
+    "change_category_status": "ВКЛ/ВЫКЛ категории",
+    "create_product": "Добавить товар",
+    "edit_product": "Изменить товар",
+    "change_product_status": "ВКЛ/ВЫКЛ товар",
+    "admin_panel": "АДМИН ПАНЕЛЬ",
+    "category_panel": "Управление категориями",
+    "insert_category_name": "Пожалуйста, введите имя категории\n"
+                            "Если передумаете, команда /cancel",
+    "added_successfully": "<b>Успешно добавлено</b>",
+    "edited_successfully": "<b>Успешно изменено</b>",
+    "pls_select_category": "Пожалуйста, выберите категорию товара\n"
+                           "Если передумаете, команда /cancel"
+
 }
 
 URLS: {str: str} = {

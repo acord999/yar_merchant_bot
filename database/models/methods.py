@@ -4,7 +4,7 @@ import datetime
 from sqlalchemy import Integer, and_, func, text, insert, select, update, and_
 from sqlalchemy.orm import aliased, Session
 from database import async_engine, async_session_factory
-from models import metadata, OrdersOrm, ClientsOrm, CategoriesOrm, ProductsOrm
+from database.models.models import metadata, OrdersOrm, ClientsOrm, CategoriesOrm, ProductsOrm
 from errors.errors import ClientAlreadyExistError, NoSuchClientError, NoSuchCategoryError, NoSuchProductError
 
 
@@ -81,8 +81,8 @@ async def change_category_status(category_id: int, enabled: bool = True) -> None
     async with async_session_factory() as session:
         q = select(CategoriesOrm).where(CategoriesOrm.id == category_id)
         result = await session.execute(q)
-        category_to_deactivate = result.first()[0]
-        category_to_deactivate.enabled = enabled
+        category = result.first()[0]
+        category.enabled = enabled
         await session.commit()
 
 
@@ -97,15 +97,15 @@ async def get_category_list(enabled: bool = True) -> list[(int, str)]:
     return res
 
 
-async def change_category_title(category_id: int, title: bool = True) -> None:
-    if not is_category_exist(category_id):
+async def change_category_title(category_id: int, title: str) -> None:
+    if not await is_category_exist(category_id):
         raise NoSuchCategoryError
 
     async with async_session_factory() as session:
         q = select(CategoriesOrm).where(CategoriesOrm.id == category_id)
         result = await session.execute(q)
-        category_to_deactivate = result.first()[0]
-        category_to_deactivate.title = title
+        category_to_edit = result.first()[0]
+        category_to_edit.title = title
         await session.commit()
 
 
@@ -119,7 +119,7 @@ async def insert_new_product(title: str, description: str, photo_paths: list[str
 
 async def is_product_exist(product_id: int):
     async with async_session_factory() as session:
-        q = select(ClientsOrm).where(CategoriesOrm.id == product_id)
+        q = select(ProductsOrm).where(ProductsOrm.id == product_id)
         result = await session.execute(q)
         return bool(result.first())
 
@@ -129,11 +129,22 @@ async def change_product_status(product_id: int, enabled: bool = True) -> None:
         raise NoSuchProductError
 
     async with async_session_factory() as session:
-        q = select(CategoriesOrm).where(CategoriesOrm.id == product_id)
+        q = select(ProductsOrm).where(ProductsOrm.id == product_id)
         result = await session.execute(q)
         product_to_change = result.first()[0]
         product_to_change.enabled = enabled
         await session.commit()
+
+
+async def get_product_list(enabled: bool = True) -> list[(int, str)]:
+    res = []
+    async with async_session_factory() as session:
+        q = select(ProductsOrm).where(ProductsOrm.enabled == enabled)
+        ex = await session.execute(q)
+        _objs = ex.all()
+        for obj in _objs:
+            res.append((obj[0].id, obj[0].title))
+    return res
 
 
 async def insert_new_order(title: str, description: str, link: str, from_client_id: int) -> None:
@@ -141,4 +152,3 @@ async def insert_new_order(title: str, description: str, link: str, from_client_
         new_order = OrdersOrm(title=title, description=description, link=link, from_client_id=from_client_id)
         session.add(new_order)
         await session.commit()
-
