@@ -15,11 +15,19 @@ async def is_client_exist(telegram_id: int) -> bool:
         return bool(result.first())
 
 
-async def insert_new_client(telegram_id: int, name: str, lastname: str) -> None:
+async def is_client_active(telegram_id: int) -> bool:
+    async with async_session_factory() as session:
+        q = select(ClientsOrm).where(ClientsOrm.telegram_id == telegram_id)
+        result = await session.execute(q)
+        client = result.first()[0]
+        return client.is_active
+
+
+async def insert_new_client(telegram_id: int, name: str, lastname: str, tg_username: str) -> None:
     existence = await is_client_exist(telegram_id)
     if not existence:
         async with async_session_factory() as session:
-            new_client = ClientsOrm(telegram_id=telegram_id, name=name, lastname=lastname)
+            new_client = ClientsOrm(telegram_id=telegram_id, name=name, lastname=lastname, tg_username=tg_username)
             session.add(new_client)
             await session.commit()
     else:
@@ -109,9 +117,9 @@ async def change_category_title(category_id: int, title: str) -> None:
         await session.commit()
 
 
-async def insert_new_product(title: str, description: str, photo_paths: list[str], category_id: int) -> None:
+async def insert_new_product(title: str, description: str, photo_path: str, category_id: int) -> None:
     async with async_session_factory() as session:
-        new_product = ProductsOrm(title=title, description=description, photo_paths=photo_paths,
+        new_product = ProductsOrm(title=title, description=description, photo_path=photo_path,
                                   category_id=category_id)
         session.add(new_product)
         await session.commit()
@@ -136,19 +144,38 @@ async def change_product_status(product_id: int, enabled: bool = True) -> None:
         await session.commit()
 
 
-async def get_product_list(enabled: bool = True) -> list[(int, str)]:
+async def get_product_list(enabled: bool = True, category_id: int | None = None, full_obj: bool = True) -> list[
+    (int, str)]:
     res = []
     async with async_session_factory() as session:
-        q = select(ProductsOrm).where(ProductsOrm.enabled == enabled)
+        if category_id:
+            q = select(ProductsOrm).where(ProductsOrm.enabled == enabled).where(ProductsOrm.category_id == category_id)
+        else:
+            q = select(ProductsOrm).where(ProductsOrm.enabled == enabled)
         ex = await session.execute(q)
         _objs = ex.all()
-        for obj in _objs:
-            res.append((obj[0].id, obj[0].title))
+        if full_obj:
+            for obj in _objs:
+                res.append(obj[0])
+        else:
+            for obj in _objs:
+                res.append((obj[0].id, obj[0].title))
     return res
 
 
-async def insert_new_order(title: str, description: str, link: str, from_client_id: int) -> None:
+async def insert_new_order(description: str, from_client_id: int, photo_path: str,
+                           category: str, country: str,) -> None:
     async with async_session_factory() as session:
-        new_order = OrdersOrm(title=title, description=description, link=link, from_client_id=from_client_id)
+        new_order = OrdersOrm(description=description, from_client_id=from_client_id,
+                              photo_path=photo_path, category=category, country=country)
         session.add(new_order)
         await session.commit()
+
+async def get_client_username(telegram_id: int):
+    async with async_session_factory() as session:
+        q = select(ClientsOrm).where(ClientsOrm.telegram_id == telegram_id)
+        result = await session.execute(q)
+        client = result.first()
+        if not client:
+            raise NoSuchClientError
+        return client[0].tg_username

@@ -32,3 +32,12 @@ def create_inline_kb(width: int,
 
     # Возвращаем объект инлайн-клавиатуры
     return kb_builder.as_markup()
+
+
+async def create_order_report_kb(client_username: str) -> InlineKeyboardMarkup:
+    contact_btn = InlineKeyboardButton(
+        text='Связаться с клиентом',
+        url=f'https://t.me/{client_username}')
+    keyboard = InlineKeyboardMarkup(
+        inline_keyboard=[[contact_btn]])
+    return keyboard

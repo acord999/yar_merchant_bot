@@ -17,8 +17,9 @@ class ClientsOrm(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True)
     telegram_id: Mapped[int] = mapped_column(unique=True)
-    name: Mapped[str] = mapped_column()
-    lastname: Mapped[str] = mapped_column()
+    tg_username: Mapped[str] = mapped_column(unique=True, nullable=False)
+    name: Mapped[str] = mapped_column(nullable=True)
+    lastname: Mapped[str] = mapped_column(nullable=True)
     created_at: Mapped[datetime.datetime] = mapped_column(server_default=text("TIMEZONE('utc', now())"))
     is_active: Mapped[bool] = mapped_column(server_default=text("True"))
 
@@ -27,9 +28,10 @@ class OrdersOrm(Base):
     __tablename__ = "orders"
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    title: Mapped[str] = mapped_column()
     description: Mapped[str] = mapped_column()
-    link: Mapped[str] = mapped_column()
+    photo_path: Mapped[str] = mapped_column(nullable=False)
+    category: Mapped[str] = mapped_column(nullable=False)
+    country: Mapped[str] = mapped_column(nullable=False)
     from_client_id: Mapped[int] = mapped_column(ForeignKey("clients.id"))
     created_at: Mapped[datetime.datetime] = mapped_column(server_default=text("TIMEZONE('utc', now())"))
 
@@ -51,6 +53,9 @@ class ProductsOrm(Base):
     title: Mapped[str] = mapped_column()
     description: Mapped[str] = mapped_column(nullable=True)
     created_at: Mapped[datetime.datetime] = mapped_column(server_default=text("TIMEZONE('utc', now())"))
-    photo_paths: Mapped[list[str]] = mapped_column(ARRAY(String))
+    photo_path: Mapped[str] = mapped_column(nullable=True)
     enabled: Mapped[bool] = mapped_column(server_default=text("True"))
     category_id: Mapped[int] = mapped_column(ForeignKey("categories.id"))
+
+
+

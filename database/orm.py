@@ -20,4 +20,3 @@ def create_tables():
 #         session.add(first_date)
 #         session.commit()
 
-

@@ -25,9 +25,22 @@ class FSMCreateProduct(StatesGroup):
     category_id = State()
     title = State()
     description = State()
-    photo_paths = State()
+    photo_path = State()
 
 
 class FSMChangeProductStatus(StatesGroup):
     product_id = State()
     enabled = State()
+
+
+class FSMProductUserView(StatesGroup):
+    category_id = State()
+    products_list = State()
+    current_product_number = State()
+
+
+class FSMMakeOrder(StatesGroup):
+    country = State()
+    category = State()
+    description = State()
+    photo_path = State()

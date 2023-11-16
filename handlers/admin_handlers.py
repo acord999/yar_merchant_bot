@@ -6,11 +6,13 @@ from aiogram.types import Message, CallbackQuery
 
 from config_data.config import load_config
 from database.models.methods import insert_new_category, get_category_list, change_category_title, \
-    change_category_status, get_product_list, change_product_status
+    change_category_status, get_product_list, change_product_status, insert_new_product
 from keyboards.keyboard_utils import create_inline_kb
 from lexicon.lexicon_ru import LEXICON_RU
 from states.states import FSMCreateCategory, FSMEditCategory, FSMChangeCategoryStatus, FSMCreateProduct, \
     FSMChangeProductStatus
+from utils.utils import download_photo
+from .bot_instance import bot
 
 admin_router = Router()
 ADMIN_IDS = load_config().tg_bot.admin_ids
@@ -57,8 +59,8 @@ async def get_category_view(message: Message, keyword: str):
 
 async def get_product_view(message: Message, keyword: str):
     product_dict = {}
-    enabled_products = await get_product_list()
-    disabled_products = await get_product_list(enabled=False)
+    enabled_products = await get_product_list(full_obj=False)
+    disabled_products = await get_product_list(enabled=False, full_obj=False)
     for product in enabled_products:
         product_dict[f"change_product_{keyword}_{str(product[0])}_True"] = f"✅ {product[0]} {product[1]}"
     for product in disabled_products:
@@ -240,11 +242,10 @@ async def process_product_title_message(message: Message, state: FSMContext):
     if message.chat.id in ADMIN_IDS:
         description = message.text
         await state.update_data(description=description)
-        await state.set_state(FSMCreateProduct.photo_paths)
+        await state.set_state(FSMCreateProduct.photo_path)
         await message.answer(f"<b>Описание товара</b> {description}\n"
-                             f"Пришлите фото для товара. Одним альбомом\n"
+                             f"Пришлите ОДНО фото для товара.\n"
                              f"Если передумаете команда /cancel")
-        await state.update_data(photo_paths=[])
 
 
 @admin_router.callback_query(F.data == "change_product_status")
@@ -265,3 +266,16 @@ async def process_change_product_status__callback(callback: CallbackQuery, state
         await state.clear()
         await state.set_state(FSMChangeProductStatus.product_id)
         await get_product_view(message=callback.message, keyword="status")
+
+
+@admin_router.message(StateFilter(FSMCreateProduct.photo_path))
+async def process_product_photo(message: Message, state: FSMContext):
+    photo_path = await download_photo(message=message, bot=bot)
+    await state.update_data(photo_path=photo_path)
+
+    data = await state.get_data()
+    await insert_new_product(title=data["title"], description=data["description"], photo_path=data["photo_path"],
+                             category_id=data["category_id"])
+    await message.answer(text=LEXICON_RU["edited_successfully"],
+                         reply_markup=create_inline_kb(1, **{"manage_products": "<< Назад <<"}))
+    await state.clear()
